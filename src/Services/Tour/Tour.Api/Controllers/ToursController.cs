@@ -12,10 +12,12 @@ namespace TourService.Controllers;
 public class ToursController : ControllerBase
 {
     private readonly ToursRepository _tours;
+    private readonly KeyPointsRepository _keyPoints;
 
-    public ToursController(ToursRepository tours)
+    public ToursController(ToursRepository tours, KeyPointsRepository keyPoints)
     {
         _tours = tours;
+        _keyPoints = keyPoints;
     }
 
     [Authorize(Roles = "Guide")]
@@ -62,6 +64,21 @@ public class ToursController : ControllerBase
         var tour = await _tours.GetByIdAsync(id);
         if (tour is null) return NotFound();
         if (tour.AuthorId != authorId) return Forbid();
+
+        var isValidTransition = (tour.Status, request.Status) is
+            (TourStatus.Draft, TourStatus.Published) or
+            (TourStatus.Published, TourStatus.Archived);
+        if (!isValidTransition)
+            return BadRequest($"Cannot transition a tour from {tour.Status} to {request.Status}.");
+
+        if (request.Status == TourStatus.Published)
+        {
+            var keyPoints = await _keyPoints.GetByTourAsync(id);
+            var hasStart = keyPoints.Any(k => k.Type == KeyPointType.Start);
+            var hasEnd = keyPoints.Any(k => k.Type == KeyPointType.End);
+            if (!hasStart || !hasEnd)
+                return BadRequest("A tour needs both a Start and an End key point before it can be published.");
+        }
 
         await _tours.UpdateStatusAsync(id, request.Status);
         return NoContent();
