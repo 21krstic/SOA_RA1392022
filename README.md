@@ -32,6 +32,18 @@ through the gateway at `http://localhost:5000`.
 Services are also individually reachable on their local ports for debugging
 (see table above), each exposing `GET /health`.
 
+## Seeding an administrator
+
+Administrators can't self-register — per spec, admin accounts are inserted
+directly into the database. With the stack running:
+
+```
+docker compose exec -T mongo mongosh stakeholders_db < scripts/seed-admin.js
+```
+
+This creates `admin` / `Admin123!`. Edit `scripts/seed-admin.js` to change the
+password hash for different credentials.
+
 ## Solution structure
 
 ```
@@ -48,7 +60,7 @@ src/
 
 ## Status
 
-Initial scaffold: project wiring, database connections, auth, and the core
-entities/endpoints for requirements 1, 4, 5, 6, 9, 10, 11, 14, 16, 17 are in
-place. Image upload handling (local file storage) is not yet implemented —
-`ImagePath`/`ImagePaths` fields currently expect a path string.
+Requirements 1, 4, 5, 6, 9, 10, 11, 14, 16, 17 are implemented and verified
+against the running stack, including image uploads (stored as local files
+under each service's `wwwroot/uploads`, served back through the gateway) and
+an admin seed script. No frontend yet.
