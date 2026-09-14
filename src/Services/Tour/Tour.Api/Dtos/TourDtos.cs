@@ -10,6 +10,6 @@ public record CreateKeyPointRequest(KeyPointType Type, string Name, string Descr
 
 public record SetPositionRequest(double Latitude, double Longitude);
 
-public record StartExecutionRequest(string TouristId, string TourId);
+public record StartExecutionRequest(string TourId);
 
 public record CheckProgressRequest(double Latitude, double Longitude);

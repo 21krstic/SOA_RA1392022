@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TourService.Data;
 using TourService.Dtos;
@@ -6,6 +8,7 @@ using TourService.Services;
 
 namespace TourService.Controllers;
 
+[Authorize(Roles = "Tourist")]
 [ApiController]
 [Route("api/executions")]
 public class ExecutionsController : ControllerBase
@@ -32,19 +35,21 @@ public class ExecutionsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<TourExecution>> Start(StartExecutionRequest request)
     {
+        var touristId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
         var tour = await _tours.GetByIdAsync(request.TourId);
         if (tour is null) return NotFound("Tour not found.");
         if (tour.Status == TourStatus.Draft) return BadRequest("Draft tours cannot be started.");
 
-        if (!await _purchaseClient.IsPurchasedAsync(request.TouristId, request.TourId))
+        if (!await _purchaseClient.IsPurchasedAsync(touristId, request.TourId))
             return Forbid();
 
-        var existingActive = await _executions.GetActiveAsync(request.TouristId, request.TourId);
+        var existingActive = await _executions.GetActiveAsync(touristId, request.TourId);
         if (existingActive is not null) return Ok(existingActive);
 
         var execution = new TourExecution
         {
-            TouristId = request.TouristId,
+            TouristId = touristId,
             TourId = request.TourId
         };
         await _executions.CreateAsync(execution);
@@ -56,6 +61,7 @@ public class ExecutionsController : ControllerBase
     {
         var execution = await _executions.GetByIdAsync(id);
         if (execution is null) return NotFound();
+        if (execution.TouristId != User.FindFirstValue(ClaimTypes.NameIdentifier)) return Forbid();
         if (execution.Status != TourExecutionStatus.Active) return BadRequest("Execution is not active.");
 
         var keyPoints = await _keyPoints.GetByTourAsync(execution.TourId);
@@ -85,6 +91,7 @@ public class ExecutionsController : ControllerBase
     {
         var execution = await _executions.GetByIdAsync(id);
         if (execution is null) return NotFound();
+        if (execution.TouristId != User.FindFirstValue(ClaimTypes.NameIdentifier)) return Forbid();
         if (execution.Status != TourExecutionStatus.Active) return BadRequest("Execution is not active.");
 
         execution.Status = status;
