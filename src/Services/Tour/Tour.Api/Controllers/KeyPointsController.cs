@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using TourService.Data;
 using TourService.Dtos;
 using TourService.Models;
+using TourService.Services;
 
 namespace TourService.Controllers;
 
@@ -13,11 +14,13 @@ public class KeyPointsController : ControllerBase
 {
     private readonly ToursRepository _tours;
     private readonly KeyPointsRepository _keyPoints;
+    private readonly PurchaseServiceClient _purchaseClient;
 
-    public KeyPointsController(ToursRepository tours, KeyPointsRepository keyPoints)
+    public KeyPointsController(ToursRepository tours, KeyPointsRepository keyPoints, PurchaseServiceClient purchaseClient)
     {
         _tours = tours;
         _keyPoints = keyPoints;
+        _purchaseClient = purchaseClient;
     }
 
     [Authorize(Roles = "Guide")]
@@ -50,7 +53,22 @@ public class KeyPointsController : ControllerBase
         return Ok(keyPoint);
     }
 
+    // Unpurchased tourists only see the starting point; the author and anyone
+    // who purchased the tour see every key point (requirement 16).
     [HttpGet]
-    public async Task<ActionResult<List<KeyPoint>>> GetAll(string tourId) =>
-        Ok(await _keyPoints.GetByTourAsync(tourId));
+    public async Task<ActionResult<List<KeyPoint>>> GetAll(string tourId)
+    {
+        var tour = await _tours.GetByIdAsync(tourId);
+        if (tour is null) return NotFound();
+
+        var keyPoints = await _keyPoints.GetByTourAsync(tourId);
+
+        var callerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var isAuthor = callerId is not null && callerId == tour.AuthorId;
+        var isPurchased = !isAuthor && callerId is not null && await _purchaseClient.IsPurchasedAsync(callerId, tourId);
+
+        if (isAuthor || isPurchased) return Ok(keyPoints);
+
+        return Ok(keyPoints.Where(k => k.Type == KeyPointType.Start).ToList());
+    }
 }
