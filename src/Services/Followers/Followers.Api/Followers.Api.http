@@ -1,0 +1,6 @@
+@Followers.Api_HostAddress = http://localhost:5147
+
+GET {{Followers.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

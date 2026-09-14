@@ -1,0 +1,6 @@
+@Stakeholders.Api_HostAddress = http://localhost:5212
+
+GET {{Stakeholders.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

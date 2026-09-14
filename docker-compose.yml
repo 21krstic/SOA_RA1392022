@@ -1,0 +1,115 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: soa-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  neo4j:
+    image: neo4j:5
+    container_name: soa-neo4j
+    environment:
+      NEO4J_AUTH: neo4j/neo4j_password
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j_data:/data
+
+  stakeholders-service:
+    build:
+      context: .
+      dockerfile: src/Services/Stakeholders/Stakeholders.Api/Dockerfile
+    container_name: soa-stakeholders
+    environment:
+      MongoDb__ConnectionString: mongodb://mongo:27017
+      Jwt__Secret: dev-only-super-secret-key-change-me-1392022-soa-turista
+      Jwt__Issuer: soa-turista
+      Jwt__Audience: soa-turista-clients
+    depends_on:
+      - mongo
+    ports:
+      - "5001:8080"
+
+  blog-service:
+    build:
+      context: .
+      dockerfile: src/Services/Blog/Blog.Api/Dockerfile
+    container_name: soa-blog
+    environment:
+      MongoDb__ConnectionString: mongodb://mongo:27017
+      Jwt__Secret: dev-only-super-secret-key-change-me-1392022-soa-turista
+      Jwt__Issuer: soa-turista
+      Jwt__Audience: soa-turista-clients
+      Grpc__FollowersServiceUrl: http://followers-service:8081
+      Followers__BaseUrl: http://followers-service:8080
+    depends_on:
+      - mongo
+      - followers-service
+    ports:
+      - "5002:8080"
+
+  followers-service:
+    build:
+      context: .
+      dockerfile: src/Services/Followers/Followers.Api/Dockerfile
+    container_name: soa-followers
+    environment:
+      Neo4j__Uri: bolt://neo4j:7687
+      Neo4j__Username: neo4j
+      Neo4j__Password: neo4j_password
+    depends_on:
+      - neo4j
+    ports:
+      - "5003:8080"
+      - "5013:8081"
+
+  tour-service:
+    build:
+      context: .
+      dockerfile: src/Services/Tour/Tour.Api/Dockerfile
+    container_name: soa-tour
+    environment:
+      MongoDb__ConnectionString: mongodb://mongo:27017
+      Jwt__Secret: dev-only-super-secret-key-change-me-1392022-soa-turista
+      Jwt__Issuer: soa-turista
+      Jwt__Audience: soa-turista-clients
+      Grpc__PurchaseServiceUrl: http://purchase-service:8081
+    depends_on:
+      - mongo
+      - purchase-service
+    ports:
+      - "5004:8080"
+
+  purchase-service:
+    build:
+      context: .
+      dockerfile: src/Services/Purchase/Purchase.Api/Dockerfile
+    container_name: soa-purchase
+    environment:
+      MongoDb__ConnectionString: mongodb://mongo:27017
+    depends_on:
+      - mongo
+    ports:
+      - "5005:8080"
+      - "5015:8081"
+
+  gateway:
+    build:
+      context: .
+      dockerfile: src/Gateway/Dockerfile
+    container_name: soa-gateway
+    depends_on:
+      - stakeholders-service
+      - blog-service
+      - followers-service
+      - tour-service
+      - purchase-service
+    ports:
+      - "5000:8080"
+
+volumes:
+  mongo_data:
+  neo4j_data:

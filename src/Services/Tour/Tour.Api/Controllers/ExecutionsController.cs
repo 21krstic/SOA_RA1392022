@@ -1,0 +1,112 @@
+using Microsoft.AspNetCore.Mvc;
+using TourService.Data;
+using TourService.Dtos;
+using TourService.Models;
+using TourService.Services;
+
+namespace TourService.Controllers;
+
+[ApiController]
+[Route("api/executions")]
+public class ExecutionsController : ControllerBase
+{
+    private const double ProximityThresholdMeters = 50;
+
+    private readonly ExecutionsRepository _executions;
+    private readonly ToursRepository _tours;
+    private readonly KeyPointsRepository _keyPoints;
+    private readonly PurchaseServiceClient _purchaseClient;
+
+    public ExecutionsController(
+        ExecutionsRepository executions,
+        ToursRepository tours,
+        KeyPointsRepository keyPoints,
+        PurchaseServiceClient purchaseClient)
+    {
+        _executions = executions;
+        _tours = tours;
+        _keyPoints = keyPoints;
+        _purchaseClient = purchaseClient;
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<TourExecution>> Start(StartExecutionRequest request)
+    {
+        var tour = await _tours.GetByIdAsync(request.TourId);
+        if (tour is null) return NotFound("Tour not found.");
+        if (tour.Status == TourStatus.Draft) return BadRequest("Draft tours cannot be started.");
+
+        if (!await _purchaseClient.IsPurchasedAsync(request.TouristId, request.TourId))
+            return Forbid();
+
+        var existingActive = await _executions.GetActiveAsync(request.TouristId, request.TourId);
+        if (existingActive is not null) return Ok(existingActive);
+
+        var execution = new TourExecution
+        {
+            TouristId = request.TouristId,
+            TourId = request.TourId
+        };
+        await _executions.CreateAsync(execution);
+        return Ok(execution);
+    }
+
+    [HttpPost("{id}/check-progress")]
+    public async Task<ActionResult<TourExecution>> CheckProgress(string id, CheckProgressRequest request)
+    {
+        var execution = await _executions.GetByIdAsync(id);
+        if (execution is null) return NotFound();
+        if (execution.Status != TourExecutionStatus.Active) return BadRequest("Execution is not active.");
+
+        var keyPoints = await _keyPoints.GetByTourAsync(execution.TourId);
+        var completedIds = execution.CompletedKeyPoints.Select(c => c.KeyPointId).ToHashSet();
+
+        foreach (var keyPoint in keyPoints.Where(k => !completedIds.Contains(k.Id)))
+        {
+            var distance = HaversineMeters(request.Latitude, request.Longitude, keyPoint.Latitude, keyPoint.Longitude);
+            if (distance <= ProximityThresholdMeters)
+            {
+                execution.CompletedKeyPoints.Add(new CompletedKeyPoint { KeyPointId = keyPoint.Id, CompletedAt = DateTime.UtcNow });
+            }
+        }
+
+        execution.LastActivity = DateTime.UtcNow;
+        await _executions.ReplaceAsync(execution);
+        return Ok(execution);
+    }
+
+    [HttpPost("{id}/complete")]
+    public async Task<ActionResult<TourExecution>> Complete(string id) => await Finish(id, TourExecutionStatus.Completed);
+
+    [HttpPost("{id}/abandon")]
+    public async Task<ActionResult<TourExecution>> Abandon(string id) => await Finish(id, TourExecutionStatus.Abandoned);
+
+    private async Task<ActionResult<TourExecution>> Finish(string id, TourExecutionStatus status)
+    {
+        var execution = await _executions.GetByIdAsync(id);
+        if (execution is null) return NotFound();
+        if (execution.Status != TourExecutionStatus.Active) return BadRequest("Execution is not active.");
+
+        execution.Status = status;
+        execution.EndTime = DateTime.UtcNow;
+        execution.LastActivity = execution.EndTime.Value;
+        await _executions.ReplaceAsync(execution);
+        return Ok(execution);
+    }
+
+    private static double HaversineMeters(double lat1, double lon1, double lat2, double lon2)
+    {
+        const double earthRadiusMeters = 6_371_000;
+        var dLat = DegreesToRadians(lat2 - lat1);
+        var dLon = DegreesToRadians(lon2 - lon1);
+
+        var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                Math.Cos(DegreesToRadians(lat1)) * Math.Cos(DegreesToRadians(lat2)) *
+                Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+        var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+
+        return earthRadiusMeters * c;
+    }
+
+    private static double DegreesToRadians(double degrees) => degrees * Math.PI / 180;
+}

@@ -1,0 +1,98 @@
+{
+  "Routes": [
+    {
+      "UpstreamPathTemplate": "/api/auth/{everything}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ],
+      "DownstreamPathTemplate": "/api/auth/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "stakeholders-service", "Port": 8080 } ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/users/{everything}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ],
+      "DownstreamPathTemplate": "/api/users/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "stakeholders-service", "Port": 8080 } ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/blogs/{everything}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ],
+      "DownstreamPathTemplate": "/api/blogs/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "blog-service", "Port": 8080 } ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/blogs",
+      "UpstreamHttpMethod": [ "Get", "Post" ],
+      "DownstreamPathTemplate": "/api/blogs",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "blog-service", "Port": 8080 } ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/follows/{everything}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Delete" ],
+      "DownstreamPathTemplate": "/api/follows/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "followers-service", "Port": 8080 } ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/follows",
+      "UpstreamHttpMethod": [ "Get", "Post", "Delete" ],
+      "DownstreamPathTemplate": "/api/follows",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "followers-service", "Port": 8080 } ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/tours/{everything}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ],
+      "DownstreamPathTemplate": "/api/tours/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "tour-service", "Port": 8080 } ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/tours",
+      "UpstreamHttpMethod": [ "Get", "Post" ],
+      "DownstreamPathTemplate": "/api/tours",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "tour-service", "Port": 8080 } ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/positions/{everything}",
+      "UpstreamHttpMethod": [ "Get", "Put" ],
+      "DownstreamPathTemplate": "/api/positions/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "tour-service", "Port": 8080 } ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/executions/{everything}",
+      "UpstreamHttpMethod": [ "Get", "Post" ],
+      "DownstreamPathTemplate": "/api/executions/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "tour-service", "Port": 8080 } ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/executions",
+      "UpstreamHttpMethod": [ "Get", "Post" ],
+      "DownstreamPathTemplate": "/api/executions",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "tour-service", "Port": 8080 } ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/cart/{everything}",
+      "UpstreamHttpMethod": [ "Get", "Post", "Delete" ],
+      "DownstreamPathTemplate": "/api/cart/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "purchase-service", "Port": 8080 } ]
+    },
+    {
+      "UpstreamPathTemplate": "/api/purchases/{everything}",
+      "UpstreamHttpMethod": [ "Get" ],
+      "DownstreamPathTemplate": "/api/purchases/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "purchase-service", "Port": 8080 } ]
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "http://localhost:5000"
+  }
+}

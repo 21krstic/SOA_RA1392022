@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option csharp_namespace = "Purchase.Grpc";
+
+package purchase;
+
+service PurchaseGrpc {
+  rpc IsPurchased (IsPurchasedRequest) returns (IsPurchasedReply);
+}
+
+message IsPurchasedRequest {
+  string tourist_id = 1;
+  string tour_id = 2;
+}
+
+message IsPurchasedReply {
+  bool is_purchased = 1;
+}

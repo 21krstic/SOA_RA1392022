@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option csharp_namespace = "Followers.Grpc";
+
+package followers;
+
+service FollowersGrpc {
+  rpc IsFollowing (IsFollowingRequest) returns (IsFollowingReply);
+}
+
+message IsFollowingRequest {
+  string follower_id = 1;
+  string followee_id = 2;
+}
+
+message IsFollowingReply {
+  bool is_following = 1;
+}
