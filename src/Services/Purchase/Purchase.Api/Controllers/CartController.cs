@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Purchase.Api.Data;
 using Purchase.Api.Models;
@@ -7,6 +9,7 @@ namespace Purchase.Api.Controllers;
 
 public record AddCartItemRequest(string TourId, string TourName, decimal Price);
 
+[Authorize]
 [ApiController]
 [Route("api/cart")]
 public class CartController : ControllerBase
@@ -22,13 +25,20 @@ public class CartController : ControllerBase
         _tourClient = tourClient;
     }
 
+    private bool IsSelf(string touristId) => User.FindFirstValue(ClaimTypes.NameIdentifier) == touristId;
+
     [HttpGet("{touristId}")]
-    public async Task<ActionResult<ShoppingCart>> GetCart(string touristId) =>
-        Ok(await _carts.GetOrCreateAsync(touristId));
+    public async Task<ActionResult<ShoppingCart>> GetCart(string touristId)
+    {
+        if (!IsSelf(touristId)) return Forbid();
+        return Ok(await _carts.GetOrCreateAsync(touristId));
+    }
 
     [HttpPost("{touristId}/items")]
     public async Task<ActionResult<ShoppingCart>> AddItem(string touristId, AddCartItemRequest request)
     {
+        if (!IsSelf(touristId)) return Forbid();
+
         var tour = await _tourClient.GetTourAsync(request.TourId);
         if (tour is null) return NotFound("Tour not found.");
         if (tour.Status != "Published") return BadRequest("Only published tours can be purchased.");
@@ -46,6 +56,8 @@ public class CartController : ControllerBase
     [HttpDelete("{touristId}/items/{tourId}")]
     public async Task<ActionResult<ShoppingCart>> RemoveItem(string touristId, string tourId)
     {
+        if (!IsSelf(touristId)) return Forbid();
+
         var cart = await _carts.GetOrCreateAsync(touristId);
         cart.Items.RemoveAll(i => i.TourId == tourId);
         await _carts.ReplaceAsync(cart);
@@ -55,6 +67,8 @@ public class CartController : ControllerBase
     [HttpPost("{touristId}/checkout")]
     public async Task<ActionResult<List<PurchaseToken>>> Checkout(string touristId)
     {
+        if (!IsSelf(touristId)) return Forbid();
+
         var cart = await _carts.GetOrCreateAsync(touristId);
         if (cart.Items.Count == 0) return BadRequest("Cart is empty.");
 

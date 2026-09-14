@@ -100,6 +100,9 @@ services:
     environment:
       MongoDb__ConnectionString: mongodb://mongo:27017
       Tour__BaseUrl: http://tour-service:8080
+      Jwt__Secret: dev-only-super-secret-key-change-me-1392022-soa-turista
+      Jwt__Issuer: soa-turista
+      Jwt__Audience: soa-turista-clients
     depends_on:
       - mongo
     ports:

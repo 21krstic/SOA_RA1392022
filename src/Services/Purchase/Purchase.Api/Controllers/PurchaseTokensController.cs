@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Purchase.Api.Data;
 
@@ -14,9 +16,13 @@ public class PurchaseTokensController : ControllerBase
         _tokens = tokens;
     }
 
+    [Authorize]
     [HttpGet("{touristId}")]
-    public async Task<IActionResult> GetPurchases(string touristId) =>
-        Ok(await _tokens.GetByTouristAsync(touristId));
+    public async Task<IActionResult> GetPurchases(string touristId)
+    {
+        if (User.FindFirstValue(ClaimTypes.NameIdentifier) != touristId) return Forbid();
+        return Ok(await _tokens.GetByTouristAsync(touristId));
+    }
 
     [HttpGet("{touristId}/is-purchased/{tourId}")]
     public async Task<ActionResult<bool>> IsPurchased(string touristId, string tourId) =>
