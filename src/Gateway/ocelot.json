@@ -15,6 +15,20 @@
       "DownstreamHostAndPorts": [ { "Host": "stakeholders-service", "Port": 8080 } ]
     },
     {
+      "UpstreamPathTemplate": "/api/uploads/{everything}",
+      "UpstreamHttpMethod": [ "Post" ],
+      "DownstreamPathTemplate": "/api/uploads/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "stakeholders-service", "Port": 8080 } ]
+    },
+    {
+      "UpstreamPathTemplate": "/uploads/profiles/{everything}",
+      "UpstreamHttpMethod": [ "Get" ],
+      "DownstreamPathTemplate": "/uploads/profiles/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "stakeholders-service", "Port": 8080 } ]
+    },
+    {
       "UpstreamPathTemplate": "/api/blogs/{everything}",
       "UpstreamHttpMethod": [ "Get", "Post", "Put", "Delete" ],
       "DownstreamPathTemplate": "/api/blogs/{everything}",

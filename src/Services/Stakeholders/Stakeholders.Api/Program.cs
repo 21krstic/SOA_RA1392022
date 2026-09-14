@@ -36,11 +36,14 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
+Directory.CreateDirectory(Path.Combine(app.Environment.ContentRootPath, "wwwroot", "uploads", "profiles"));
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
 
+app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 

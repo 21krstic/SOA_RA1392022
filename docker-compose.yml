@@ -32,6 +32,8 @@ services:
       - mongo
     ports:
       - "5001:8080"
+    volumes:
+      - stakeholders_uploads:/app/wwwroot/uploads
 
   blog-service:
     build:
@@ -113,3 +115,4 @@ services:
 volumes:
   mongo_data:
   neo4j_data:
+  stakeholders_uploads:
