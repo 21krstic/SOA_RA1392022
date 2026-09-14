@@ -86,6 +86,8 @@ services:
       - purchase-service
     ports:
       - "5004:8080"
+    volumes:
+      - tour_uploads:/app/wwwroot/uploads
 
   purchase-service:
     build:
@@ -119,3 +121,4 @@ volumes:
   neo4j_data:
   stakeholders_uploads:
   blog_uploads:
+  tour_uploads:

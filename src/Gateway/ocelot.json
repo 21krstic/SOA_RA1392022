@@ -57,6 +57,20 @@
       "DownstreamHostAndPorts": [ { "Host": "blog-service", "Port": 8080 } ]
     },
     {
+      "UpstreamPathTemplate": "/api/uploads/keypoint-image",
+      "UpstreamHttpMethod": [ "Post" ],
+      "DownstreamPathTemplate": "/api/uploads/keypoint-image",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "tour-service", "Port": 8080 } ]
+    },
+    {
+      "UpstreamPathTemplate": "/uploads/keypoints/{everything}",
+      "UpstreamHttpMethod": [ "Get" ],
+      "DownstreamPathTemplate": "/uploads/keypoints/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [ { "Host": "tour-service", "Port": 8080 } ]
+    },
+    {
       "UpstreamPathTemplate": "/api/follows/{everything}",
       "UpstreamHttpMethod": [ "Get", "Post", "Delete" ],
       "DownstreamPathTemplate": "/api/follows/{everything}",
