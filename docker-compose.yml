@@ -64,6 +64,9 @@ services:
       Neo4j__Uri: bolt://neo4j:7687
       Neo4j__Username: neo4j
       Neo4j__Password: neo4j_password
+      Jwt__Secret: dev-only-super-secret-key-change-me-1392022-soa-turista
+      Jwt__Issuer: soa-turista
+      Jwt__Audience: soa-turista-clients
     depends_on:
       - neo4j
     ports:

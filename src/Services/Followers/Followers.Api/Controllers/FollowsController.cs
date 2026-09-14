@@ -1,9 +1,11 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Followers.Api.Data;
 
 namespace Followers.Api.Controllers;
 
-public record FollowRequest(string FollowerId, string FolloweeId);
+public record FollowRequest(string FolloweeId);
 
 [ApiController]
 [Route("api/follows")]
@@ -16,19 +18,23 @@ public class FollowsController : ControllerBase
         _repository = repository;
     }
 
+    [Authorize]
     [HttpPost]
     public async Task<IActionResult> Follow(FollowRequest request)
     {
-        if (request.FollowerId == request.FolloweeId)
+        var followerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        if (followerId == request.FolloweeId)
             return BadRequest("A user cannot follow themselves.");
 
-        await _repository.FollowAsync(request.FollowerId, request.FolloweeId);
+        await _repository.FollowAsync(followerId, request.FolloweeId);
         return NoContent();
     }
 
+    [Authorize]
     [HttpDelete]
-    public async Task<IActionResult> Unfollow([FromQuery] string followerId, [FromQuery] string followeeId)
+    public async Task<IActionResult> Unfollow([FromQuery] string followeeId)
     {
+        var followerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         await _repository.UnfollowAsync(followerId, followeeId);
         return NoContent();
     }

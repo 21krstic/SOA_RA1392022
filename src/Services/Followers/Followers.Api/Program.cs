@@ -1,6 +1,9 @@
+using System.Text;
 using Followers.Api.Data;
 using Followers.Api.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +19,23 @@ builder.WebHost.ConfigureKestrel(options =>
 builder.Services.Configure<Neo4jSettings>(builder.Configuration.GetSection("Neo4j"));
 builder.Services.AddSingleton<FollowsRepository>();
 
+var jwtSection = builder.Configuration.GetSection("Jwt");
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSection["Issuer"],
+            ValidAudience = jwtSection["Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSection["Secret"]!))
+        };
+    });
+builder.Services.AddAuthorization();
+
 builder.Services.AddGrpc();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
@@ -26,6 +46,9 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", service = "Followers" }));
 app.MapControllers();
