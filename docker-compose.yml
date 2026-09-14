@@ -96,6 +96,7 @@ services:
     container_name: soa-purchase
     environment:
       MongoDb__ConnectionString: mongodb://mongo:27017
+      Tour__BaseUrl: http://tour-service:8080
     depends_on:
       - mongo
     ports:

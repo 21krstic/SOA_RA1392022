@@ -17,6 +17,13 @@ builder.Services.Configure<MongoDbSettings>(builder.Configuration.GetSection("Mo
 builder.Services.AddSingleton<CartsRepository>();
 builder.Services.AddSingleton<PurchaseTokensRepository>();
 
+builder.Services.AddHttpClient<TourServiceClient>(client =>
+{
+    var baseUrl = builder.Configuration["Tour:BaseUrl"]
+        ?? throw new InvalidOperationException("Tour:BaseUrl is not configured.");
+    client.BaseAddress = new Uri(baseUrl);
+});
+
 builder.Services.AddGrpc();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();

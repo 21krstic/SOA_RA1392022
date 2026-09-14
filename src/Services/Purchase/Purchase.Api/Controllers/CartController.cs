@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Purchase.Api.Data;
 using Purchase.Api.Models;
+using Purchase.Api.Services;
 
 namespace Purchase.Api.Controllers;
 
@@ -12,11 +13,13 @@ public class CartController : ControllerBase
 {
     private readonly CartsRepository _carts;
     private readonly PurchaseTokensRepository _tokens;
+    private readonly TourServiceClient _tourClient;
 
-    public CartController(CartsRepository carts, PurchaseTokensRepository tokens)
+    public CartController(CartsRepository carts, PurchaseTokensRepository tokens, TourServiceClient tourClient)
     {
         _carts = carts;
         _tokens = tokens;
+        _tourClient = tourClient;
     }
 
     [HttpGet("{touristId}")]
@@ -26,6 +29,10 @@ public class CartController : ControllerBase
     [HttpPost("{touristId}/items")]
     public async Task<ActionResult<ShoppingCart>> AddItem(string touristId, AddCartItemRequest request)
     {
+        var tour = await _tourClient.GetTourAsync(request.TourId);
+        if (tour is null) return NotFound("Tour not found.");
+        if (tour.Status != "Published") return BadRequest("Only published tours can be purchased.");
+
         var cart = await _carts.GetOrCreateAsync(touristId);
 
         if (cart.Items.Any(i => i.TourId == request.TourId))
