@@ -1,0 +1,22 @@
+* { box-sizing: border-box; }
+body { font-family: system-ui, sans-serif; margin: 0; background: #f5f5f5; color: #222; }
+header { background: #22314f; color: white; padding: 0.75rem 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+header h1 { font-size: 1.2rem; margin: 0; }
+#tabs { display: flex; flex-wrap: wrap; background: #35486e; }
+#tabs button { flex: 1; padding: 0.6rem; border: none; background: none; color: #cdd6e8; cursor: pointer; font-size: 0.9rem; }
+#tabs button.active { background: #f5f5f5; color: #22314f; font-weight: bold; }
+main { padding: 1rem 1.5rem; max-width: 900px; margin: 0 auto; }
+.tab { display: none; }
+.tab.active { display: block; }
+section h2 { margin-top: 1.5rem; border-bottom: 1px solid #ccc; padding-bottom: 0.25rem; }
+form { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 0.75rem; }
+input, select, button, textarea { padding: 0.4rem; font-size: 0.9rem; }
+button { cursor: pointer; background: #22314f; color: white; border: none; border-radius: 4px; padding: 0.45rem 0.8rem; }
+button:hover { background: #35486e; }
+.map { height: 300px; margin: 0.5rem 0; border: 1px solid #ccc; }
+.card { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 0.75rem; margin-bottom: 0.5rem; }
+.card img { max-width: 120px; display: block; margin-top: 0.4rem; }
+footer { background: #111; color: #b6ff9a; padding: 1rem 1.5rem; font-family: monospace; font-size: 0.75rem; }
+#log { max-height: 220px; overflow-y: auto; white-space: pre-wrap; }
+#log .entry { border-bottom: 1px solid #333; padding: 0.3rem 0; }
+#log .err { color: #ff8a8a; }

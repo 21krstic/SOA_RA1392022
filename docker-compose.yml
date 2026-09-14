@@ -123,6 +123,16 @@ services:
     ports:
       - "5000:8080"
 
+  frontend:
+    build:
+      context: src/Frontend
+      dockerfile: Dockerfile
+    container_name: soa-frontend
+    depends_on:
+      - gateway
+    ports:
+      - "8090:80"
+
 volumes:
   mongo_data:
   neo4j_data:

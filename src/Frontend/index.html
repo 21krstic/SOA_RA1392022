@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SOA Turista — manual test console</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>SOA Turista</h1>
+    <div id="session-info">Not logged in</div>
+  </header>
+
+  <nav id="tabs">
+    <button data-tab="auth" class="active">Auth</button>
+    <button data-tab="profile">Profile</button>
+    <button data-tab="blog">Blog &amp; Follow</button>
+    <button data-tab="tours">My Tours (Guide)</button>
+    <button data-tab="browse">Browse &amp; Cart</button>
+    <button data-tab="position">Position Simulator</button>
+    <button data-tab="execution">Tour Execution</button>
+  </nav>
+
+  <main>
+    <section id="auth" class="tab active">
+      <h2>Register</h2>
+      <form id="register-form">
+        <input name="username" placeholder="username" required />
+        <input name="email" type="email" placeholder="email" required />
+        <input name="password" type="password" placeholder="password" required />
+        <select name="role">
+          <option value="Tourist">Tourist</option>
+          <option value="Guide">Guide</option>
+        </select>
+        <button type="submit">Register</button>
+      </form>
+
+      <h2>Login</h2>
+      <form id="login-form">
+        <input name="username" placeholder="username" required />
+        <input name="password" type="password" placeholder="password" required />
+        <button type="submit">Login</button>
+      </form>
+
+      <button id="logout-btn">Log out</button>
+    </section>
+
+    <section id="profile" class="tab">
+      <h2>My Profile</h2>
+      <button id="load-profile-btn">Load my profile</button>
+      <div id="profile-view"></div>
+
+      <h3>Edit profile</h3>
+      <form id="profile-form">
+        <input name="firstName" placeholder="first name" />
+        <input name="lastName" placeholder="last name" />
+        <input name="biography" placeholder="biography" />
+        <input name="motto" placeholder="motto" />
+        <label>Profile picture: <input id="profile-image-input" type="file" accept="image/*" /></label>
+        <input type="hidden" name="profileImagePath" />
+        <button type="submit">Save profile</button>
+      </form>
+    </section>
+
+    <section id="blog" class="tab">
+      <h2>Create Blog</h2>
+      <form id="blog-form">
+        <input name="title" placeholder="title" required />
+        <input name="description" placeholder="description" required />
+        <label>Images: <input id="blog-image-input" type="file" accept="image/*" multiple /></label>
+        <button type="submit">Post blog</button>
+      </form>
+
+      <h2>Feed (blogs from people I follow)</h2>
+      <button id="load-feed-btn">Load feed</button>
+      <div id="feed-view"></div>
+
+      <h2>Follow</h2>
+      <form id="follow-form">
+        <input name="followeeId" placeholder="user id to follow" required />
+        <button type="submit">Follow</button>
+        <button type="button" id="unfollow-btn">Unfollow</button>
+      </form>
+
+      <button id="load-recs-btn">Load my recommendations</button>
+      <div id="recs-view"></div>
+    </section>
+
+    <section id="tours" class="tab">
+      <h2>Create Tour</h2>
+      <form id="tour-form">
+        <input name="name" placeholder="name" required />
+        <input name="description" placeholder="description" required />
+        <select name="difficulty">
+          <option>Easy</option>
+          <option>Medium</option>
+          <option>Hard</option>
+        </select>
+        <input name="tags" placeholder="tags, comma separated" />
+        <button type="submit">Create draft tour</button>
+      </form>
+
+      <button id="load-my-tours-btn">Load my tours</button>
+      <div id="my-tours-view"></div>
+
+      <h2>Key points for tour</h2>
+      <input id="keypoint-tour-id" placeholder="tour id" />
+      <div id="keypoint-map" class="map"></div>
+      <p>Click the map to set the pending lat/lng, then fill in the form and add it.</p>
+      <form id="keypoint-form">
+        <select name="type">
+          <option value="Start">Start</option>
+          <option value="End">End</option>
+        </select>
+        <input name="name" placeholder="name" required />
+        <input name="description" placeholder="description" required />
+        <label>Image: <input id="keypoint-image-input" type="file" accept="image/*" /></label>
+        <input type="hidden" name="imagePath" />
+        <span>lat: <span id="kp-lat">-</span> lng: <span id="kp-lng">-</span></span>
+        <button type="submit">Add key point</button>
+      </form>
+      <button id="load-keypoints-btn">Load key points</button>
+      <div id="keypoints-view"></div>
+    </section>
+
+    <section id="browse" class="tab">
+      <h2>View a tour</h2>
+      <input id="browse-tour-id" placeholder="tour id" />
+      <button id="browse-tour-btn">View tour</button>
+      <div id="browse-tour-view"></div>
+
+      <h3>Add to cart</h3>
+      <form id="cart-add-form">
+        <input name="tourId" placeholder="tour id" required />
+        <input name="tourName" placeholder="tour name" required />
+        <input name="price" type="number" step="0.01" placeholder="price" required />
+        <button type="submit">Add to cart</button>
+      </form>
+
+      <h2>My Cart</h2>
+      <button id="load-cart-btn">Load my cart</button>
+      <div id="cart-view"></div>
+      <button id="checkout-btn">Checkout</button>
+      <div id="checkout-view"></div>
+
+      <h2>My Purchases</h2>
+      <button id="load-purchases-btn">Load my purchases</button>
+      <div id="purchases-view"></div>
+    </section>
+
+    <section id="position" class="tab">
+      <h2>Position Simulator</h2>
+      <p>Click the map to set your current simulated position.</p>
+      <div id="position-map" class="map"></div>
+      <button id="load-position-btn">Load my last saved position</button>
+      <div id="position-view"></div>
+    </section>
+
+    <section id="execution" class="tab">
+      <h2>Tour Execution</h2>
+      <input id="exec-tour-id" placeholder="tour id" />
+      <button id="start-exec-btn">Start execution</button>
+      <div id="exec-view"></div>
+
+      <p>Uses the last position clicked on the Position Simulator tab.</p>
+      <input id="exec-id" placeholder="execution id" />
+      <button id="check-progress-btn">Check progress</button>
+      <button id="complete-exec-btn">Complete</button>
+      <button id="abandon-exec-btn">Abandon</button>
+      <div id="exec-action-view"></div>
+    </section>
+  </main>
+
+  <footer>
+    <h3>API log</h3>
+    <div id="log"></div>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
