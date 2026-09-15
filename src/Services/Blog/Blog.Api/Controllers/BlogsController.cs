@@ -14,11 +14,13 @@ public class BlogsController : ControllerBase
 {
     private readonly BlogsRepository _blogs;
     private readonly FollowersRestClient _followersRest;
+    private readonly FollowersServiceClient _followersGrpc;
 
-    public BlogsController(BlogsRepository blogs, FollowersRestClient followersRest)
+    public BlogsController(BlogsRepository blogs, FollowersRestClient followersRest, FollowersServiceClient followersGrpc)
     {
         _blogs = blogs;
         _followersRest = followersRest;
+        _followersGrpc = followersGrpc;
     }
 
     [Authorize]
@@ -39,11 +41,19 @@ public class BlogsController : ControllerBase
         return Ok(blog);
     }
 
+    // Readable only by the author or a follower of the author (requirement 9).
+    [Authorize]
     [HttpGet("{id}")]
     public async Task<ActionResult<Blog>> GetById(string id)
     {
         var blog = await _blogs.GetByIdAsync(id);
-        return blog is null ? NotFound() : Ok(blog);
+        if (blog is null) return NotFound();
+
+        var callerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        if (callerId != blog.AuthorId && !await _followersGrpc.IsFollowingAsync(callerId, blog.AuthorId))
+            return Forbid();
+
+        return Ok(blog);
     }
 
     // Only blogs from authors the caller follows (requirement 9).
