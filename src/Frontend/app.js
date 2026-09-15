@@ -389,12 +389,10 @@ document.getElementById("load-purchases-btn").addEventListener("click", async ()
 });
 
 // ---------- position simulator ----------
-let lastPosition = null;
 const positionMap = L.map("position-map").setView([45.2671, 19.8335], 13);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "OSM" }).addTo(positionMap);
 let positionMarker = null;
 positionMap.on("click", async (e) => {
-  lastPosition = e.latlng;
   if (positionMarker) positionMap.removeLayer(positionMarker);
   positionMarker = L.marker(e.latlng).addTo(positionMap);
   await api("PUT", `/api/positions/${session.userId}`, { latitude: e.latlng.lat, longitude: e.latlng.lng });
@@ -406,34 +404,53 @@ document.getElementById("load-position-btn").addEventListener("click", async () 
 });
 
 // ---------- tour execution ----------
+// Active-tour screen polls every 10s: ask the Position Simulator where the
+// tourist is, then send that to the backend to check proximity to key points.
 let lastExecutionId = null;
+let pollTimer = null;
+
+function stopPolling() {
+  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+}
+
+async function pollProgress(manual = false) {
+  const id = document.getElementById("exec-id").value;
+  if (!id) return;
+  const pos = await api("GET", `/api/positions/${session.userId}`);
+  if (!pos.ok) {
+    if (manual) alert("Set your position on the Position Simulator map first.");
+    return;
+  }
+  const { data } = await api("POST", `/api/executions/${id}/check-progress`, {
+    latitude: pos.data.latitude, longitude: pos.data.longitude,
+  });
+  document.getElementById("exec-action-view").innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+}
+
 document.getElementById("start-exec-btn").addEventListener("click", async () => {
   const tourId = document.getElementById("exec-tour-id").value;
   const { data, ok } = await api("POST", "/api/executions", { tourId });
   if (ok) {
     lastExecutionId = data.id;
     document.getElementById("exec-id").value = data.id;
+    stopPolling();
+    pollTimer = setInterval(pollProgress, 10000);
   }
   document.getElementById("exec-view").innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
 });
 
-document.getElementById("check-progress-btn").addEventListener("click", async () => {
-  const id = document.getElementById("exec-id").value;
-  if (!lastPosition) { alert("Click the Position Simulator map first."); return; }
-  const { data } = await api("POST", `/api/executions/${id}/check-progress`, {
-    latitude: lastPosition.lat, longitude: lastPosition.lng,
-  });
-  document.getElementById("exec-action-view").innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-});
+document.getElementById("check-progress-btn").addEventListener("click", () => pollProgress(true));
 
 document.getElementById("complete-exec-btn").addEventListener("click", async () => {
   const id = document.getElementById("exec-id").value;
+  stopPolling();
   const { data } = await api("POST", `/api/executions/${id}/complete`);
   document.getElementById("exec-action-view").innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
 });
 
 document.getElementById("abandon-exec-btn").addEventListener("click", async () => {
   const id = document.getElementById("exec-id").value;
+  stopPolling();
   const { data } = await api("POST", `/api/executions/${id}/abandon`);
   document.getElementById("exec-action-view").innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
 });
