@@ -29,6 +29,19 @@ public class UsersController : ControllerBase
             user.Profile.ProfileImagePath, user.Profile.Biography, user.Profile.Motto));
     }
 
+    // Lets the frontend resolve a username to an id, e.g. to follow someone by name.
+    [HttpGet("by-username/{username}")]
+    public async Task<ActionResult<UserProfileResponse>> GetByUsername(string username)
+    {
+        var user = await _users.GetByUsernameAsync(username);
+        if (user is null) return NotFound();
+
+        return Ok(new UserProfileResponse(
+            user.Id, user.Username, user.Role,
+            user.Profile.FirstName, user.Profile.LastName,
+            user.Profile.ProfileImagePath, user.Profile.Biography, user.Profile.Motto));
+    }
+
     [Authorize]
     [HttpPut("{id}/profile")]
     public async Task<IActionResult> UpdateProfile(string id, UpdateProfileRequest request)

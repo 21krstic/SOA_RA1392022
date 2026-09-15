@@ -1,141 +1,141 @@
 <!doctype html>
-<html lang="en">
+<html lang="sr">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>SOA Turista — manual test console</title>
+  <title>SOA Turista — konzola za ručno testiranje</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header>
     <h1>SOA Turista</h1>
-    <span id="busy-indicator" hidden>⏳ Loading…</span>
-    <div id="session-info">Not logged in</div>
+    <span id="busy-indicator" hidden>⏳ Učitavanje…</span>
+    <div id="session-info">Niste prijavljeni</div>
   </header>
 
   <nav id="tabs">
-    <button data-tab="auth" class="active">Auth</button>
-    <button data-tab="profile">Profile</button>
-    <button data-tab="blog">Blog &amp; Follow</button>
-    <button data-tab="tours">My Tours (Guide)</button>
-    <button data-tab="browse">Browse &amp; Cart</button>
-    <button data-tab="position">Position Simulator</button>
-    <button data-tab="execution">Tour Execution</button>
+    <button data-tab="auth" class="active">Prijava</button>
+    <button data-tab="profile">Profil</button>
+    <button data-tab="blog">Blog i praćenje</button>
+    <button data-tab="tours">Moje ture (Vodič)</button>
+    <button data-tab="browse">Pregled i korpa</button>
+    <button data-tab="position">Simulator pozicije</button>
+    <button data-tab="execution">Izvođenje ture</button>
   </nav>
 
   <main>
     <section id="auth" class="tab active">
-      <h2>Register</h2>
+      <h2>Registracija</h2>
       <form id="register-form">
-        <input name="username" placeholder="username" required />
+        <input name="username" placeholder="korisničko ime" required />
         <input name="email" type="email" placeholder="email" required />
-        <input name="password" type="password" placeholder="password" required />
+        <input name="password" type="password" placeholder="lozinka" required />
         <select name="role">
-          <option value="Tourist">Tourist</option>
-          <option value="Guide">Guide</option>
+          <option value="Tourist">Turista</option>
+          <option value="Guide">Vodič</option>
         </select>
-        <button type="submit">Register</button>
+        <button type="submit">Registruj se</button>
       </form>
 
-      <h2>Login</h2>
+      <h2>Prijava</h2>
       <form id="login-form">
-        <input name="username" placeholder="username" required />
-        <input name="password" type="password" placeholder="password" required />
-        <button type="submit">Login</button>
+        <input name="username" placeholder="korisničko ime" required />
+        <input name="password" type="password" placeholder="lozinka" required />
+        <button type="submit">Prijavi se</button>
       </form>
 
-      <button id="logout-btn">Log out all accounts</button>
-      <p>Logged in accounts can be switched from the dropdown in the header — no need to log out to swap roles.</p>
+      <button id="logout-btn">Odjavi sve naloge</button>
+      <p>Prijavljeni nalozi mogu se menjati putem padajućeg menija u zaglavlju — nije potrebno odjaviti se da biste promenili ulogu.</p>
     </section>
 
     <section id="profile" class="tab">
-      <h2>My Profile</h2>
-      <button id="load-profile-btn">Load my profile</button>
+      <h2>Moj profil</h2>
+      <button id="load-profile-btn">Učitaj moj profil</button>
       <div id="profile-view"></div>
 
-      <h3>Edit profile</h3>
+      <h3>Izmena profila</h3>
       <form id="profile-form">
-        <input name="firstName" placeholder="first name" />
-        <input name="lastName" placeholder="last name" />
-        <input name="biography" placeholder="biography" />
-        <input name="motto" placeholder="motto" />
-        <label>Profile picture: <input id="profile-image-input" type="file" accept="image/*" /></label>
+        <input name="firstName" placeholder="ime" />
+        <input name="lastName" placeholder="prezime" />
+        <input name="biography" placeholder="biografija" />
+        <input name="motto" placeholder="moto" />
+        <label>Profilna slika: <input id="profile-image-input" type="file" accept="image/*" /></label>
         <input type="hidden" name="profileImagePath" />
-        <button type="submit">Save profile</button>
+        <button type="submit">Sačuvaj profil</button>
       </form>
     </section>
 
     <section id="blog" class="tab">
-      <h2>Create Blog</h2>
+      <h2>Kreiraj blog</h2>
       <form id="blog-form">
-        <input name="title" placeholder="title" required />
-        <input name="description" placeholder="description" required />
-        <label>Images: <input id="blog-image-input" type="file" accept="image/*" multiple /></label>
-        <button type="submit">Post blog</button>
+        <input name="title" placeholder="naslov" required />
+        <input name="description" placeholder="opis" required />
+        <label>Slike: <input id="blog-image-input" type="file" accept="image/*" multiple /></label>
+        <button type="submit">Objavi blog</button>
       </form>
 
-      <h2>Feed (blogs from people I follow)</h2>
-      <button id="load-feed-btn">Load feed</button>
+      <h2>Feed (blogovi ljudi koje pratim)</h2>
+      <button id="load-feed-btn">Učitaj feed</button>
       <div id="feed-view"></div>
 
-      <h2>Follow</h2>
+      <h2>Praćenje</h2>
       <form id="follow-form">
-        <input name="followeeId" placeholder="user id to follow" required />
-        <button type="submit">Follow</button>
-        <button type="button" id="unfollow-btn">Unfollow</button>
+        <input name="username" placeholder="korisničko ime za praćenje" required />
+        <button type="submit">Zaprati</button>
+        <button type="button" id="unfollow-btn">Otprati</button>
       </form>
 
-      <button id="load-recs-btn">Load my recommendations</button>
+      <button id="load-recs-btn">Učitaj moje preporuke</button>
       <div id="recs-view"></div>
     </section>
 
     <section id="tours" class="tab">
-      <h2>Create Tour</h2>
+      <h2>Kreiraj turu</h2>
       <form id="tour-form">
-        <input name="name" placeholder="name" required />
-        <input name="description" placeholder="description" required />
+        <input name="name" placeholder="naziv" required />
+        <input name="description" placeholder="opis" required />
         <select name="difficulty">
-          <option>Easy</option>
-          <option>Medium</option>
-          <option>Hard</option>
+          <option value="Easy">Lako</option>
+          <option value="Medium">Srednje</option>
+          <option value="Hard">Teško</option>
         </select>
-        <input name="tags" placeholder="tags, comma separated" />
-        <input name="lengthKm" type="number" step="0.1" min="0" placeholder="length (km)" required />
-        <input name="durationMinutes" type="number" step="1" min="0" placeholder="duration (minutes)" required />
-        <button type="submit">Create draft tour</button>
+        <input name="tags" placeholder="tagovi, odvojeni zarezom" />
+        <input name="lengthKm" type="number" step="0.1" min="0" placeholder="dužina (km)" required />
+        <input name="durationMinutes" type="number" step="1" min="0" placeholder="trajanje (minuti)" required />
+        <button type="submit">Kreiraj turu (nacrt)</button>
       </form>
 
-      <button id="load-my-tours-btn">Load my tours</button>
+      <button id="load-my-tours-btn">Učitaj moje ture</button>
       <div id="my-tours-view"></div>
 
-      <h2>Key points for tour</h2>
-      <input id="keypoint-tour-id" placeholder="tour id" />
+      <h2>Ključne tačke ture</h2>
+      <input id="keypoint-tour-id" placeholder="ID ture" />
       <div id="keypoint-map" class="map"></div>
-      <p>Click the map to set the pending lat/lng, then fill in the form and add it.</p>
+      <p>Kliknite na mapu da postavite lokaciju, zatim popunite formu i dodajte je.</p>
       <form id="keypoint-form">
         <select name="type">
-          <option value="Start">Start</option>
-          <option value="End">End</option>
+          <option value="Start">Početna</option>
+          <option value="End">Krajnja</option>
         </select>
-        <input name="name" placeholder="name" required />
-        <input name="description" placeholder="description" required />
-        <label>Image: <input id="keypoint-image-input" type="file" accept="image/*" /></label>
+        <input name="name" placeholder="naziv" required />
+        <input name="description" placeholder="opis" required />
+        <label>Slika: <input id="keypoint-image-input" type="file" accept="image/*" /></label>
         <input type="hidden" name="imagePath" />
-        <span>lat: <span id="kp-lat">-</span> lng: <span id="kp-lng">-</span></span>
-        <button type="submit">Add key point</button>
+        <span>širina: <span id="kp-lat">-</span> dužina: <span id="kp-lng">-</span></span>
+        <button type="submit">Dodaj ključnu tačku</button>
       </form>
-      <button id="load-keypoints-btn">Load key points</button>
+      <button id="load-keypoints-btn">Učitaj ključne tačke</button>
       <div id="keypoints-view"></div>
     </section>
 
     <section id="browse" class="tab">
-      <h2>View a tour</h2>
-      <input id="browse-tour-id" placeholder="tour id" />
-      <button id="browse-tour-btn">View tour</button>
+      <h2>Pregled ture</h2>
+      <input id="browse-tour-id" placeholder="ID ture" />
+      <button id="browse-tour-btn">Prikaži turu</button>
       <div id="browse-tour-view"></div>
 
-      <h3>Reviews</h3>
+      <h3>Recenzije</h3>
       <div id="reviews-view"></div>
       <form id="review-form">
         <select name="rating">
@@ -145,54 +145,54 @@
           <option value="2">2</option>
           <option value="1">1</option>
         </select>
-        <input name="comment" placeholder="comment" required />
-        <button type="submit">Leave review</button>
+        <input name="comment" placeholder="komentar" required />
+        <button type="submit">Ostavi recenziju</button>
       </form>
-      <p>Only tourists who purchased this tour can leave a review.</p>
+      <p>Samo turisti koji su kupili ovu turu mogu ostaviti recenziju.</p>
 
-      <h3>Add to cart</h3>
+      <h3>Dodaj u korpu</h3>
       <form id="cart-add-form">
-        <input name="tourId" placeholder="tour id" required />
-        <button type="submit">Add to cart</button>
+        <input name="tourId" placeholder="ID ture" required />
+        <button type="submit">Dodaj u korpu</button>
       </form>
-      <p>Name and price come from the tour itself, not the cart form.</p>
+      <p>Naziv i cena preuzimaju se iz same ture, ne iz forme korpe.</p>
 
-      <h2>My Cart</h2>
-      <button id="load-cart-btn">Load my cart</button>
+      <h2>Moja korpa</h2>
+      <button id="load-cart-btn">Učitaj moju korpu</button>
       <div id="cart-view"></div>
-      <button id="checkout-btn">Checkout</button>
+      <button id="checkout-btn">Plati</button>
       <div id="checkout-view"></div>
 
-      <h2>My Purchases</h2>
-      <button id="load-purchases-btn">Load my purchases</button>
+      <h2>Moje kupovine</h2>
+      <button id="load-purchases-btn">Učitaj moje kupovine</button>
       <div id="purchases-view"></div>
     </section>
 
     <section id="position" class="tab">
-      <h2>Position Simulator</h2>
-      <p>Click the map to set your current simulated position.</p>
+      <h2>Simulator pozicije</h2>
+      <p>Kliknite na mapu da postavite svoju trenutnu simuliranu poziciju.</p>
       <div id="position-map" class="map"></div>
-      <button id="load-position-btn">Load my last saved position</button>
+      <button id="load-position-btn">Učitaj moju poslednju sačuvanu poziciju</button>
       <div id="position-view"></div>
     </section>
 
     <section id="execution" class="tab">
-      <h2>Tour Execution</h2>
-      <input id="exec-tour-id" placeholder="tour id" />
-      <button id="start-exec-btn">Start execution</button>
+      <h2>Izvođenje ture</h2>
+      <input id="exec-tour-id" placeholder="ID ture" />
+      <button id="start-exec-btn">Pokreni turu</button>
       <div id="exec-view"></div>
 
-      <p>Uses the last position clicked on the Position Simulator tab.</p>
-      <input id="exec-id" placeholder="execution id" />
-      <button id="check-progress-btn">Check progress</button>
-      <button id="complete-exec-btn">Complete</button>
-      <button id="abandon-exec-btn">Abandon</button>
+      <p>Koristi poslednju poziciju kliknutu na kartici Simulator pozicije.</p>
+      <input id="exec-id" placeholder="ID izvođenja" />
+      <button id="check-progress-btn">Proveri napredak</button>
+      <button id="complete-exec-btn">Završi</button>
+      <button id="abandon-exec-btn">Napusti</button>
       <div id="exec-action-view"></div>
     </section>
   </main>
 
   <footer>
-    <h3>API log</h3>
+    <h3>Zapisnik API poziva</h3>
     <div id="log"></div>
   </footer>
 

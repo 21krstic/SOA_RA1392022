@@ -1,5 +1,11 @@
 const API = "http://localhost:5000";
 
+// ---------- Serbian labels for backend enum values (payloads keep the English names) ----------
+const ROLE_SR = { Guide: "Vodič", Tourist: "Turista", Administrator: "Administrator" };
+const DIFFICULTY_SR = { Easy: "Lako", Medium: "Srednje", Hard: "Teško" };
+const TOUR_STATUS_SR = { Draft: "Nacrt", Published: "Objavljena", Archived: "Arhivirana" };
+const KEYPOINT_TYPE_SR = { Start: "Početna", End: "Krajnja" };
+
 // ---------- session ----------
 // Multiple accounts can be logged in at once (keyed by username), so you can
 // test as a Guide and a Tourist in the same browser tab without juggling
@@ -54,14 +60,14 @@ function renderSession() {
   const el = document.getElementById("session-info");
 
   if (usernames.length === 0) {
-    el.innerHTML = "Not logged in";
+    el.innerHTML = "Niste prijavljeni";
     return;
   }
   el.innerHTML = `
     <select id="session-switcher">
-      ${usernames.map((u) => `<option value="${u}" ${u === active ? "selected" : ""}>${u} (${sessions[u].role})</option>`).join("")}
+      ${usernames.map((u) => `<option value="${u}" ${u === active ? "selected" : ""}>${u} (${ROLE_SR[sessions[u].role] ?? sessions[u].role})</option>`).join("")}
     </select>
-    <button id="header-logout-btn" type="button">Log out this account</button>`;
+    <button id="header-logout-btn" type="button">Odjavi ovaj nalog</button>`;
 }
 
 document.getElementById("session-info").addEventListener("change", (e) => {
@@ -137,16 +143,24 @@ document.getElementById("tabs").addEventListener("click", (e) => {
 // ---------- auth ----------
 document.getElementById("register-form").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const f = new FormData(e.target);
+  const form = e.target;
+  const f = new FormData(form);
   const { data, ok } = await api("POST", "/api/auth/register", Object.fromEntries(f), { auth: false });
-  if (ok) session.set(data);
+  if (ok) {
+    session.set(data);
+    form.reset();
+  }
 });
 
 document.getElementById("login-form").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const f = new FormData(e.target);
+  const form = e.target;
+  const f = new FormData(form);
   const { data, ok } = await api("POST", "/api/auth/login", Object.fromEntries(f), { auth: false });
-  if (ok) session.set(data);
+  if (ok) {
+    session.set(data);
+    form.reset();
+  }
 });
 
 document.getElementById("logout-btn").addEventListener("click", () => session.clearAll());
@@ -157,7 +171,7 @@ document.getElementById("load-profile-btn").addEventListener("click", async () =
   if (!ok) return;
   document.getElementById("profile-view").innerHTML = `
     <div class="card">
-      <strong>${data.firstName} ${data.lastName}</strong> (${data.role})<br/>
+      <strong>${data.firstName} ${data.lastName}</strong> (${ROLE_SR[data.role] ?? data.role})<br/>
       ${data.biography ?? ""}<br/>
       <em>${data.motto ?? ""}</em>
       ${data.profileImagePath ? `<img src="${API}${data.profileImagePath}" />` : ""}
@@ -202,15 +216,15 @@ document.getElementById("load-feed-btn").addEventListener("click", async () => {
   if (!ok) return;
   document.getElementById("feed-view").innerHTML = data.map((b) => `
     <div class="card">
-      <strong>${b.title}</strong> by ${b.authorId}<br/>
+      <strong>${b.title}</strong> autor: ${b.authorId}<br/>
       ${b.description}<br/>
       ${(b.imagePaths || []).map((p) => `<img src="${API}${p}" />`).join("")}
       <div class="comments" data-blog-id="${b.id}"></div>
       <form class="comment-form" data-blog-id="${b.id}">
-        <input name="text" placeholder="comment" required />
-        <button type="submit">Comment</button>
+        <input name="text" placeholder="komentar" required />
+        <button type="submit">Komentariši</button>
       </form>
-    </div>`).join("") || "<p>No blogs (follow someone first).</p>";
+    </div>`).join("") || "<p>Nema blogova (prvo nekog zapratite).</p>";
   data.forEach((b) => loadComments(b.id));
 });
 
@@ -219,7 +233,7 @@ async function loadComments(blogId) {
   if (!ok) return;
   const container = document.querySelector(`.comments[data-blog-id="${blogId}"]`);
   if (container) {
-    container.innerHTML = data.map((c) => `<div>💬 <em>${c.authorId}</em>: ${c.text}</div>`).join("") || "<div><em>No comments yet.</em></div>";
+    container.innerHTML = data.map((c) => `<div>💬 <em>${c.authorId}</em>: ${c.text}</div>`).join("") || "<div><em>Još nema komentara.</em></div>";
   }
 }
 
@@ -235,14 +249,28 @@ document.getElementById("feed-view").addEventListener("submit", async (e) => {
   }
 });
 
+async function resolveUsernameToId(username) {
+  const { data, ok } = await api("GET", `/api/users/by-username/${encodeURIComponent(username)}`, undefined, { auth: false });
+  if (!ok) {
+    alert(`Korisnik "${username}" nije pronađen.`);
+    return null;
+  }
+  return data.id;
+}
+
 document.getElementById("follow-form").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const body = Object.fromEntries(new FormData(e.target));
-  await api("POST", "/api/follows", body);
+  const form = e.target;
+  const followeeId = await resolveUsernameToId(form.username.value);
+  if (!followeeId) return;
+  const { ok } = await api("POST", "/api/follows", { followeeId });
+  if (ok) form.reset();
 });
 
 document.getElementById("unfollow-btn").addEventListener("click", async () => {
-  const followeeId = document.querySelector('#follow-form [name=followeeId]').value;
+  const username = document.querySelector('#follow-form [name=username]').value;
+  const followeeId = await resolveUsernameToId(username);
+  if (!followeeId) return;
   await api("DELETE", `/api/follows?followeeId=${encodeURIComponent(followeeId)}`);
 });
 
@@ -275,14 +303,14 @@ document.getElementById("load-my-tours-btn").addEventListener("click", async () 
   if (!ok) return;
   document.getElementById("my-tours-view").innerHTML = data.map((t) => `
     <div class="card">
-      <strong>${t.name}</strong> — ${t.status} — price: ${t.price} — id: <code>${t.id}</code><br/>
+      <strong>${t.name}</strong> — ${TOUR_STATUS_SR[t.status] ?? t.status} — cena: ${t.price} — ID: <code>${t.id}</code><br/>
       ${t.description}<br/>
-      <button data-use="${t.id}">Use this tour id</button>
-      <button data-publish="${t.id}">Publish</button>
-      <button data-archive="${t.id}">Archive</button>
-      <input type="number" step="0.01" class="price-input" placeholder="new price" />
-      <button data-set-price="${t.id}">Set price</button>
-    </div>`).join("") || "<p>No tours yet.</p>";
+      <button data-use="${t.id}">Koristi ovaj ID ture</button>
+      <button data-publish="${t.id}">Objavi</button>
+      <button data-archive="${t.id}">Arhiviraj</button>
+      <input type="number" step="0.01" class="price-input" placeholder="nova cena" />
+      <button data-set-price="${t.id}">Postavi cenu</button>
+    </div>`).join("") || "<p>Još nema tura.</p>";
 });
 
 document.getElementById("my-tours-view").addEventListener("click", async (e) => {
@@ -318,7 +346,7 @@ keypointMap.on("click", (e) => {
 
 document.getElementById("keypoint-form").addEventListener("submit", async (e) => {
   e.preventDefault();
-  if (!pendingLatLng) { alert("Click the map first to set a location."); return; }
+  if (!pendingLatLng) { alert("Prvo kliknite na mapu da postavite lokaciju."); return; }
   const tourId = document.getElementById("keypoint-tour-id").value;
   const form = e.target;
   const fileInput = document.getElementById("keypoint-image-input");
@@ -337,9 +365,9 @@ document.getElementById("load-keypoints-btn").addEventListener("click", async ()
   const { data, ok } = await api("GET", `/api/tours/${tourId}/keypoints`, undefined, { auth: !!session.token });
   if (!ok) return;
   keypointMarkers.forEach((m) => keypointMap.removeLayer(m));
-  keypointMarkers = data.map((k) => L.marker([k.latitude, k.longitude]).addTo(keypointMap).bindPopup(`${k.type}: ${k.name}`));
+  keypointMarkers = data.map((k) => L.marker([k.latitude, k.longitude]).addTo(keypointMap).bindPopup(`${KEYPOINT_TYPE_SR[k.type] ?? k.type}: ${k.name}`));
   document.getElementById("keypoints-view").innerHTML = data.map((k) => `
-    <div class="card">${k.type}: <strong>${k.name}</strong> — ${k.description}
+    <div class="card">${KEYPOINT_TYPE_SR[k.type] ?? k.type}: <strong>${k.name}</strong> — ${k.description}
     ${k.imagePath ? `<img src="${API}${k.imagePath}" />` : ""}</div>`).join("");
 });
 
@@ -353,10 +381,10 @@ document.getElementById("browse-tour-btn").addEventListener("click", async () =>
   lastBrowsedTour = data;
   document.getElementById("browse-tour-view").innerHTML = `
     <div class="card">
-      <strong>${data.name}</strong> — ${data.status} — difficulty: ${data.difficulty} — price: ${data.price}<br/>
+      <strong>${data.name}</strong> — ${TOUR_STATUS_SR[data.status] ?? data.status} — težina: ${DIFFICULTY_SR[data.difficulty] ?? data.difficulty} — cena: ${data.price}<br/>
       ${data.description}<br/>
-      Length: ${data.lengthKm} km — Duration: ${data.durationMinutes} min<br/>
-      Visible key points: ${kp.ok ? kp.data.map((k) => k.type).join(", ") : "n/a"}
+      Dužina: ${data.lengthKm} km — Trajanje: ${data.durationMinutes} min<br/>
+      Vidljive ključne tačke: ${kp.ok ? kp.data.map((k) => KEYPOINT_TYPE_SR[k.type] ?? k.type).join(", ") : "n/d"}
     </div>`;
   document.getElementById("cart-add-form").tourId.value = data.id;
   await loadReviews(data.id);
@@ -366,7 +394,7 @@ async function loadReviews(tourId) {
   const { data, ok } = await api("GET", `/api/tours/${tourId}/reviews`, undefined, { auth: false });
   if (!ok) return;
   document.getElementById("reviews-view").innerHTML = data.map((r) => `
-    <div class="card">${"⭐".repeat(r.rating)} — ${r.comment} <em>(${r.touristId})</em></div>`).join("") || "<p>No reviews yet.</p>";
+    <div class="card">${"⭐".repeat(r.rating)} — ${r.comment} <em>(${r.touristId})</em></div>`).join("") || "<p>Još nema recenzija.</p>";
 }
 
 document.getElementById("review-form").addEventListener("submit", async (e) => {
@@ -383,19 +411,21 @@ document.getElementById("review-form").addEventListener("submit", async (e) => {
 
 document.getElementById("cart-add-form").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const body = Object.fromEntries(new FormData(e.target));
-  await api("POST", `/api/cart/${session.userId}/items`, body);
+  const form = e.target;
+  const body = Object.fromEntries(new FormData(form));
+  const { ok } = await api("POST", `/api/cart/${session.userId}/items`, body);
+  if (ok) form.reset();
 });
 
 document.getElementById("load-cart-btn").addEventListener("click", async () => {
   const { data, ok } = await api("GET", `/api/cart/${session.userId}`);
   if (!ok) return;
   document.getElementById("cart-view").innerHTML = `
-    <p>Total: ${data.totalPrice}</p>
+    <p>Ukupno: ${data.totalPrice}</p>
     ${data.items.map((i) => `
       <div class="card">${i.tourName} — ${i.price}
-        <button data-remove="${i.tourId}">Remove</button>
-      </div>`).join("") || "<p>Cart is empty.</p>"}`;
+        <button data-remove="${i.tourId}">Ukloni</button>
+      </div>`).join("") || "<p>Korpa je prazna.</p>"}`;
 });
 
 document.getElementById("cart-view").addEventListener("click", async (e) => {
@@ -444,7 +474,7 @@ async function pollProgress(manual = false) {
   if (!id) return;
   const pos = await api("GET", `/api/positions/${session.userId}`);
   if (!pos.ok) {
-    if (manual) alert("Set your position on the Position Simulator map first.");
+    if (manual) alert("Prvo postavite svoju poziciju na mapi Simulatora pozicije.");
     return;
   }
   const { data } = await api("POST", `/api/executions/${id}/check-progress`, {
