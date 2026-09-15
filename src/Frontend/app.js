@@ -192,7 +192,7 @@ document.getElementById("unfollow-btn").addEventListener("click", async () => {
 });
 
 document.getElementById("load-recs-btn").addEventListener("click", async () => {
-  const { data, ok } = await api("GET", `/api/follows/${session.userId}/recommendations`, undefined, { auth: false });
+  const { data, ok } = await api("GET", `/api/follows/${session.userId}/recommendations`);
   if (ok) document.getElementById("recs-view").innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
 });
 

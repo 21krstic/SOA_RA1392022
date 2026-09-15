@@ -24,7 +24,11 @@ public class PurchaseTokensController : ControllerBase
         return Ok(await _tokens.GetByTouristAsync(touristId));
     }
 
+    [Authorize]
     [HttpGet("{touristId}/is-purchased/{tourId}")]
-    public async Task<ActionResult<bool>> IsPurchased(string touristId, string tourId) =>
-        Ok(await _tokens.IsPurchasedAsync(touristId, tourId));
+    public async Task<ActionResult<bool>> IsPurchased(string touristId, string tourId)
+    {
+        if (User.FindFirstValue(ClaimTypes.NameIdentifier) != touristId) return Forbid();
+        return Ok(await _tokens.IsPurchasedAsync(touristId, tourId));
+    }
 }

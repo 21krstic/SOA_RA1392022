@@ -51,9 +51,14 @@ public class FollowsController : ControllerBase
         return Ok(await _repository.GetFollowingAsync(userId));
     }
 
+    // Recommendations are derived from the caller's own follow graph, so —
+    // unlike is-following/following, which describe an inherently public
+    // social graph — this one is scoped to the caller.
+    [Authorize]
     [HttpGet("{userId}/recommendations")]
     public async Task<ActionResult<List<string>>> GetRecommendations(string userId)
     {
+        if (User.FindFirstValue(ClaimTypes.NameIdentifier) != userId) return Forbid();
         return Ok(await _repository.GetRecommendationsAsync(userId));
     }
 }
