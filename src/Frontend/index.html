@@ -101,6 +101,8 @@
           <option>Hard</option>
         </select>
         <input name="tags" placeholder="tags, comma separated" />
+        <input name="lengthKm" type="number" step="0.1" min="0" placeholder="length (km)" required />
+        <input name="durationMinutes" type="number" step="1" min="0" placeholder="duration (minutes)" required />
         <button type="submit">Create draft tour</button>
       </form>
 
@@ -132,6 +134,21 @@
       <input id="browse-tour-id" placeholder="tour id" />
       <button id="browse-tour-btn">View tour</button>
       <div id="browse-tour-view"></div>
+
+      <h3>Reviews</h3>
+      <div id="reviews-view"></div>
+      <form id="review-form">
+        <select name="rating">
+          <option value="5">5</option>
+          <option value="4">4</option>
+          <option value="3">3</option>
+          <option value="2">2</option>
+          <option value="1">1</option>
+        </select>
+        <input name="comment" placeholder="comment" required />
+        <button type="submit">Leave review</button>
+      </form>
+      <p>Only tourists who purchased this tour can leave a review.</p>
 
       <h3>Add to cart</h3>
       <form id="cart-add-form">

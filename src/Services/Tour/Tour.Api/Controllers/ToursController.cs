@@ -34,7 +34,9 @@ public class ToursController : ControllerBase
             Difficulty = request.Difficulty,
             Tags = request.Tags,
             Status = TourStatus.Draft,
-            Price = 0
+            Price = 0,
+            LengthKm = request.LengthKm,
+            DurationMinutes = request.DurationMinutes
         };
 
         await _tours.CreateAsync(tour);

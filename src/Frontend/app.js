@@ -256,7 +256,12 @@ document.getElementById("tour-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const form = e.target;
   const raw = Object.fromEntries(new FormData(form));
-  const body = { ...raw, tags: raw.tags ? raw.tags.split(",").map((t) => t.trim()) : [] };
+  const body = {
+    ...raw,
+    tags: raw.tags ? raw.tags.split(",").map((t) => t.trim()) : [],
+    lengthKm: Number(raw.lengthKm),
+    durationMinutes: Number(raw.durationMinutes),
+  };
   const { data, ok } = await api("POST", "/api/tours", body);
   if (ok) {
     form.reset();
@@ -350,9 +355,30 @@ document.getElementById("browse-tour-btn").addEventListener("click", async () =>
     <div class="card">
       <strong>${data.name}</strong> — ${data.status} — difficulty: ${data.difficulty} — price: ${data.price}<br/>
       ${data.description}<br/>
+      Length: ${data.lengthKm} km — Duration: ${data.durationMinutes} min<br/>
       Visible key points: ${kp.ok ? kp.data.map((k) => k.type).join(", ") : "n/a"}
     </div>`;
   document.getElementById("cart-add-form").tourId.value = data.id;
+  await loadReviews(data.id);
+});
+
+async function loadReviews(tourId) {
+  const { data, ok } = await api("GET", `/api/tours/${tourId}/reviews`, undefined, { auth: false });
+  if (!ok) return;
+  document.getElementById("reviews-view").innerHTML = data.map((r) => `
+    <div class="card">${"⭐".repeat(r.rating)} — ${r.comment} <em>(${r.touristId})</em></div>`).join("") || "<p>No reviews yet.</p>";
+}
+
+document.getElementById("review-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const tourId = document.getElementById("browse-tour-id").value;
+  const form = e.target;
+  const raw = Object.fromEntries(new FormData(form));
+  const { ok } = await api("POST", `/api/tours/${tourId}/reviews`, { rating: Number(raw.rating), comment: raw.comment });
+  if (ok) {
+    form.reset();
+    await loadReviews(tourId);
+  }
 });
 
 document.getElementById("cart-add-form").addEventListener("submit", async (e) => {

@@ -27,4 +27,6 @@ public class Tour
     public List<string> Tags { get; set; } = [];
     public TourStatus Status { get; set; } = TourStatus.Draft;
     public decimal Price { get; set; } = 0;
+    public double LengthKm { get; set; }
+    public int DurationMinutes { get; set; }
 }

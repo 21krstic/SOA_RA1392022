@@ -14,6 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<MongoDbSettings>(builder.Configuration.GetSection("MongoDb"));
 builder.Services.AddSingleton<ToursRepository>();
 builder.Services.AddSingleton<KeyPointsRepository>();
+builder.Services.AddSingleton<ReviewsRepository>();
 builder.Services.AddSingleton<PositionsRepository>();
 builder.Services.AddSingleton<ExecutionsRepository>();
 builder.Services.AddSingleton<PurchaseServiceClient>();
