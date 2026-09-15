@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Options;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using Stakeholders.Api.Models;
 
@@ -15,8 +16,8 @@ public class UsersRepository
         _users = database.GetCollection<User>("users");
     }
 
-    public Task<User?> GetByIdAsync(string id) =>
-        _users.Find(u => u.Id == id).FirstOrDefaultAsync()!;
+    public async Task<User?> GetByIdAsync(string id) =>
+        ObjectId.TryParse(id, out _) ? await _users.Find(u => u.Id == id).FirstOrDefaultAsync() : null;
 
     public Task<User?> GetByUsernameAsync(string username) =>
         _users.Find(u => u.Username == username).FirstOrDefaultAsync()!;

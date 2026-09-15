@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Options;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using BlogService.Models;
 
@@ -17,7 +18,8 @@ public class BlogsRepository
 
     public Task CreateAsync(Blog blog) => _blogs.InsertOneAsync(blog);
 
-    public Task<Blog?> GetByIdAsync(string id) => _blogs.Find(b => b.Id == id).FirstOrDefaultAsync()!;
+    public async Task<Blog?> GetByIdAsync(string id) =>
+        ObjectId.TryParse(id, out _) ? await _blogs.Find(b => b.Id == id).FirstOrDefaultAsync() : null;
 
     public Task<List<Blog>> GetByAuthorsAsync(IEnumerable<string> authorIds) =>
         _blogs.Find(Builders<Blog>.Filter.In(b => b.AuthorId, authorIds))

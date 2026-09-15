@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Options;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using TourService.Models;
 
@@ -17,7 +18,8 @@ public class ToursRepository
 
     public Task CreateAsync(Tour tour) => _tours.InsertOneAsync(tour);
 
-    public Task<Tour?> GetByIdAsync(string id) => _tours.Find(t => t.Id == id).FirstOrDefaultAsync()!;
+    public async Task<Tour?> GetByIdAsync(string id) =>
+        ObjectId.TryParse(id, out _) ? await _tours.Find(t => t.Id == id).FirstOrDefaultAsync() : null;
 
     public Task<List<Tour>> GetByAuthorAsync(string authorId) =>
         _tours.Find(t => t.AuthorId == authorId).ToListAsync();
