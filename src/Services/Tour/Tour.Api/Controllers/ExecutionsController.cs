@@ -69,7 +69,7 @@ public class ExecutionsController : ControllerBase
 
         foreach (var keyPoint in keyPoints.Where(k => !completedIds.Contains(k.Id)))
         {
-            var distance = HaversineMeters(request.Latitude, request.Longitude, keyPoint.Latitude, keyPoint.Longitude);
+            var distance = GeoUtils.DistanceMeters(request.Latitude, request.Longitude, keyPoint.Latitude, keyPoint.Longitude);
             if (distance <= ProximityThresholdMeters)
             {
                 execution.CompletedKeyPoints.Add(new CompletedKeyPoint { KeyPointId = keyPoint.Id, CompletedAt = DateTime.UtcNow });
@@ -100,20 +100,4 @@ public class ExecutionsController : ControllerBase
         await _executions.ReplaceAsync(execution);
         return Ok(execution);
     }
-
-    private static double HaversineMeters(double lat1, double lon1, double lat2, double lon2)
-    {
-        const double earthRadiusMeters = 6_371_000;
-        var dLat = DegreesToRadians(lat2 - lat1);
-        var dLon = DegreesToRadians(lon2 - lon1);
-
-        var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
-                Math.Cos(DegreesToRadians(lat1)) * Math.Cos(DegreesToRadians(lat2)) *
-                Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
-        var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
-
-        return earthRadiusMeters * c;
-    }
-
-    private static double DegreesToRadians(double degrees) => degrees * Math.PI / 180;
 }

@@ -7,6 +7,13 @@ public enum TourDifficulty { Easy, Medium, Hard }
 
 public enum TourStatus { Draft, Published, Archived }
 
+public static class TourStatusTransitions
+{
+    public static bool IsValid(TourStatus from, TourStatus to) => (from, to) is
+        (TourStatus.Draft, TourStatus.Published) or
+        (TourStatus.Published, TourStatus.Archived);
+}
+
 public class Tour
 {
     [BsonId]

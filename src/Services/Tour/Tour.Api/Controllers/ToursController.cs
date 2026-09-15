@@ -65,10 +65,7 @@ public class ToursController : ControllerBase
         if (tour is null) return NotFound();
         if (tour.AuthorId != authorId) return Forbid();
 
-        var isValidTransition = (tour.Status, request.Status) is
-            (TourStatus.Draft, TourStatus.Published) or
-            (TourStatus.Published, TourStatus.Archived);
-        if (!isValidTransition)
+        if (!TourStatusTransitions.IsValid(tour.Status, request.Status))
             return BadRequest($"Cannot transition a tour from {tour.Status} to {request.Status}.");
 
         if (request.Status == TourStatus.Published)
