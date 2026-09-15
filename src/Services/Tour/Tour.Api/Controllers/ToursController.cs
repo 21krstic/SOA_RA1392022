@@ -83,4 +83,19 @@ public class ToursController : ControllerBase
         await _tours.UpdateStatusAsync(id, request.Status);
         return NoContent();
     }
+
+    [Authorize(Roles = "Guide")]
+    [HttpPut("{id}/price")]
+    public async Task<IActionResult> UpdatePrice(string id, UpdateTourPriceRequest request)
+    {
+        if (request.Price < 0) return BadRequest("Price cannot be negative.");
+
+        var authorId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var tour = await _tours.GetByIdAsync(id);
+        if (tour is null) return NotFound();
+        if (tour.AuthorId != authorId) return Forbid();
+
+        await _tours.UpdatePriceAsync(id, request.Price);
+        return NoContent();
+    }
 }

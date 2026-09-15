@@ -26,4 +26,7 @@ public class ToursRepository
 
     public Task UpdateStatusAsync(string id, TourStatus status) =>
         _tours.UpdateOneAsync(t => t.Id == id, Builders<Tour>.Update.Set(t => t.Status, status));
+
+    public Task UpdatePriceAsync(string id, decimal price) =>
+        _tours.UpdateOneAsync(t => t.Id == id, Builders<Tour>.Update.Set(t => t.Price, price));
 }

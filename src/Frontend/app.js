@@ -215,11 +215,13 @@ document.getElementById("load-my-tours-btn").addEventListener("click", async () 
   if (!ok) return;
   document.getElementById("my-tours-view").innerHTML = data.map((t) => `
     <div class="card">
-      <strong>${t.name}</strong> — ${t.status} — id: <code>${t.id}</code><br/>
+      <strong>${t.name}</strong> — ${t.status} — price: ${t.price} — id: <code>${t.id}</code><br/>
       ${t.description}<br/>
       <button data-use="${t.id}">Use this tour id</button>
       <button data-publish="${t.id}">Publish</button>
       <button data-archive="${t.id}">Archive</button>
+      <input type="number" step="0.01" class="price-input" placeholder="new price" />
+      <button data-set-price="${t.id}">Set price</button>
     </div>`).join("") || "<p>No tours yet.</p>";
 });
 
@@ -227,6 +229,7 @@ document.getElementById("my-tours-view").addEventListener("click", async (e) => 
   const useId = e.target.dataset.use;
   const publishId = e.target.dataset.publish;
   const archiveId = e.target.dataset.archive;
+  const setPriceId = e.target.dataset.setPrice;
   if (useId) {
     document.getElementById("keypoint-tour-id").value = useId;
     document.getElementById("browse-tour-id").value = useId;
@@ -234,6 +237,12 @@ document.getElementById("my-tours-view").addEventListener("click", async (e) => 
   }
   if (publishId) await api("PUT", `/api/tours/${publishId}/status`, { status: "Published" });
   if (archiveId) await api("PUT", `/api/tours/${archiveId}/status`, { status: "Archived" });
+  if (setPriceId) {
+    const input = e.target.previousElementSibling;
+    const price = Number(input.value);
+    await api("PUT", `/api/tours/${setPriceId}/price`, { price });
+    document.getElementById("load-my-tours-btn").click();
+  }
 });
 
 let pendingLatLng = null;
@@ -284,19 +293,16 @@ document.getElementById("browse-tour-btn").addEventListener("click", async () =>
   lastBrowsedTour = data;
   document.getElementById("browse-tour-view").innerHTML = `
     <div class="card">
-      <strong>${data.name}</strong> — ${data.status} — difficulty: ${data.difficulty}<br/>
+      <strong>${data.name}</strong> — ${data.status} — difficulty: ${data.difficulty} — price: ${data.price}<br/>
       ${data.description}<br/>
       Visible key points: ${kp.ok ? kp.data.map((k) => k.type).join(", ") : "n/a"}
     </div>`;
-  const cartForm = document.getElementById("cart-add-form");
-  cartForm.tourId.value = data.id;
-  cartForm.tourName.value = data.name;
+  document.getElementById("cart-add-form").tourId.value = data.id;
 });
 
 document.getElementById("cart-add-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const body = Object.fromEntries(new FormData(e.target));
-  body.price = Number(body.price);
   await api("POST", `/api/cart/${session.userId}/items`, body);
 });
 

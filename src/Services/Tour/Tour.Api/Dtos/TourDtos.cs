@@ -6,6 +6,8 @@ public record CreateTourRequest(string Name, string Description, TourDifficulty 
 
 public record UpdateTourStatusRequest(TourStatus Status);
 
+public record UpdateTourPriceRequest(decimal Price);
+
 public record CreateKeyPointRequest(KeyPointType Type, string Name, string Description, string? ImagePath, double Latitude, double Longitude);
 
 public record SetPositionRequest(double Latitude, double Longitude);

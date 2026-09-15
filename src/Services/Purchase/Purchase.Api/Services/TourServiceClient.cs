@@ -2,7 +2,11 @@ using System.Text.Json.Serialization;
 
 namespace Purchase.Api.Services;
 
-public record TourSummary([property: JsonPropertyName("id")] string Id, [property: JsonPropertyName("status")] string Status);
+public record TourSummary(
+    [property: JsonPropertyName("id")] string Id,
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("status")] string Status,
+    [property: JsonPropertyName("price")] decimal Price);
 
 public class TourServiceClient
 {

@@ -7,7 +7,7 @@ using Purchase.Api.Services;
 
 namespace Purchase.Api.Controllers;
 
-public record AddCartItemRequest(string TourId, string TourName, decimal Price);
+public record AddCartItemRequest(string TourId);
 
 [Authorize]
 [ApiController]
@@ -48,7 +48,7 @@ public class CartController : ControllerBase
         if (cart.Items.Any(i => i.TourId == request.TourId))
             return Conflict("Tour is already in the cart.");
 
-        cart.Items.Add(new CartItem { TourId = request.TourId, TourName = request.TourName, Price = request.Price });
+        cart.Items.Add(new CartItem { TourId = request.TourId, TourName = tour.Name, Price = tour.Price });
         await _carts.ReplaceAsync(cart);
         return Ok(cart);
     }
