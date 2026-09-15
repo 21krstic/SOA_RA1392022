@@ -150,19 +150,34 @@ document.getElementById("load-feed-btn").addEventListener("click", async () => {
       <strong>${b.title}</strong> by ${b.authorId}<br/>
       ${b.description}<br/>
       ${(b.imagePaths || []).map((p) => `<img src="${API}${p}" />`).join("")}
+      <div class="comments" data-blog-id="${b.id}"></div>
       <form class="comment-form" data-blog-id="${b.id}">
         <input name="text" placeholder="comment" required />
         <button type="submit">Comment</button>
       </form>
     </div>`).join("") || "<p>No blogs (follow someone first).</p>";
+  data.forEach((b) => loadComments(b.id));
 });
+
+async function loadComments(blogId) {
+  const { data, ok } = await api("GET", `/api/blogs/${blogId}/comments`, undefined, { auth: false });
+  if (!ok) return;
+  const container = document.querySelector(`.comments[data-blog-id="${blogId}"]`);
+  if (container) {
+    container.innerHTML = data.map((c) => `<div>💬 <em>${c.authorId}</em>: ${c.text}</div>`).join("") || "<div><em>No comments yet.</em></div>";
+  }
+}
 
 document.getElementById("feed-view").addEventListener("submit", async (e) => {
   if (!e.target.classList.contains("comment-form")) return;
   e.preventDefault();
   const blogId = e.target.dataset.blogId;
   const body = Object.fromEntries(new FormData(e.target));
-  await api("POST", `/api/blogs/${blogId}/comments`, body);
+  const { ok } = await api("POST", `/api/blogs/${blogId}/comments`, body);
+  if (ok) {
+    e.target.reset();
+    await loadComments(blogId);
+  }
 });
 
 document.getElementById("follow-form").addEventListener("submit", async (e) => {
@@ -187,8 +202,12 @@ document.getElementById("tour-form").addEventListener("submit", async (e) => {
   const form = e.target;
   const raw = Object.fromEntries(new FormData(form));
   const body = { ...raw, tags: raw.tags ? raw.tags.split(",").map((t) => t.trim()) : [] };
-  const { ok } = await api("POST", "/api/tours", body);
-  if (ok) form.reset();
+  const { data, ok } = await api("POST", "/api/tours", body);
+  if (ok) {
+    form.reset();
+    // Avoid having to copy-paste the id by hand for the very next step.
+    document.getElementById("keypoint-tour-id").value = data.id;
+  }
 });
 
 document.getElementById("load-my-tours-btn").addEventListener("click", async () => {
@@ -196,16 +215,23 @@ document.getElementById("load-my-tours-btn").addEventListener("click", async () 
   if (!ok) return;
   document.getElementById("my-tours-view").innerHTML = data.map((t) => `
     <div class="card">
-      <strong>${t.name}</strong> — ${t.status} — id: ${t.id}<br/>
+      <strong>${t.name}</strong> — ${t.status} — id: <code>${t.id}</code><br/>
       ${t.description}<br/>
+      <button data-use="${t.id}">Use this tour id</button>
       <button data-publish="${t.id}">Publish</button>
       <button data-archive="${t.id}">Archive</button>
     </div>`).join("") || "<p>No tours yet.</p>";
 });
 
 document.getElementById("my-tours-view").addEventListener("click", async (e) => {
+  const useId = e.target.dataset.use;
   const publishId = e.target.dataset.publish;
   const archiveId = e.target.dataset.archive;
+  if (useId) {
+    document.getElementById("keypoint-tour-id").value = useId;
+    document.getElementById("browse-tour-id").value = useId;
+    document.getElementById("exec-tour-id").value = useId;
+  }
   if (publishId) await api("PUT", `/api/tours/${publishId}/status`, { status: "Published" });
   if (archiveId) await api("PUT", `/api/tours/${archiveId}/status`, { status: "Archived" });
 });
