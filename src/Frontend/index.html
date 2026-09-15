@@ -10,6 +10,7 @@
 <body>
   <header>
     <h1>SOA Turista</h1>
+    <span id="busy-indicator" hidden>⏳ Loading…</span>
     <div id="session-info">Not logged in</div>
   </header>
 
@@ -44,7 +45,8 @@
         <button type="submit">Login</button>
       </form>
 
-      <button id="logout-btn">Log out</button>
+      <button id="logout-btn">Log out all accounts</button>
+      <p>Logged in accounts can be switched from the dropdown in the header — no need to log out to swap roles.</p>
     </section>
 
     <section id="profile" class="tab">

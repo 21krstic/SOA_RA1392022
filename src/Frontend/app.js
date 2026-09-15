@@ -1,30 +1,75 @@
 const API = "http://localhost:5000";
 
 // ---------- session ----------
+// Multiple accounts can be logged in at once (keyed by username), so you can
+// test as a Guide and a Tourist in the same browser tab without juggling
+// separate profiles — just switch the active one from the header dropdown.
+const SESSIONS_KEY = "sessions";
+const ACTIVE_KEY = "activeUsername";
+
+function getSessions() {
+  try { return JSON.parse(localStorage.getItem(SESSIONS_KEY) || "{}"); } catch { return {}; }
+}
+function saveSessions(sessions) { localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions)); }
+
 const session = {
-  get token() { return localStorage.getItem("token"); },
-  get userId() { return localStorage.getItem("userId"); },
-  get username() { return localStorage.getItem("username"); },
-  get role() { return localStorage.getItem("role"); },
+  get active() {
+    const sessions = getSessions();
+    return sessions[localStorage.getItem(ACTIVE_KEY)] || null;
+  },
+  get token() { return session.active?.token; },
+  get userId() { return session.active?.userId; },
+  get username() { return session.active?.username; },
+  get role() { return session.active?.role; },
   set(data) {
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("userId", data.userId);
-    localStorage.setItem("username", data.username);
-    localStorage.setItem("role", data.role);
+    const sessions = getSessions();
+    sessions[data.username] = data;
+    saveSessions(sessions);
+    localStorage.setItem(ACTIVE_KEY, data.username);
     renderSession();
   },
-  clear() {
-    localStorage.clear();
+  switchTo(username) {
+    localStorage.setItem(ACTIVE_KEY, username);
+    renderSession();
+  },
+  removeActive() {
+    const sessions = getSessions();
+    const active = localStorage.getItem(ACTIVE_KEY);
+    delete sessions[active];
+    saveSessions(sessions);
+    localStorage.setItem(ACTIVE_KEY, Object.keys(sessions)[0] || "");
+    renderSession();
+  },
+  clearAll() {
+    localStorage.removeItem(SESSIONS_KEY);
+    localStorage.removeItem(ACTIVE_KEY);
     renderSession();
   },
 };
 
 function renderSession() {
+  const sessions = getSessions();
+  const usernames = Object.keys(sessions);
+  const active = localStorage.getItem(ACTIVE_KEY);
   const el = document.getElementById("session-info");
-  el.textContent = session.token
-    ? `${session.username} (${session.role}) — id: ${session.userId}`
-    : "Not logged in";
+
+  if (usernames.length === 0) {
+    el.innerHTML = "Not logged in";
+    return;
+  }
+  el.innerHTML = `
+    <select id="session-switcher">
+      ${usernames.map((u) => `<option value="${u}" ${u === active ? "selected" : ""}>${u} (${sessions[u].role})</option>`).join("")}
+    </select>
+    <button id="header-logout-btn" type="button">Log out this account</button>`;
 }
+
+document.getElementById("session-info").addEventListener("change", (e) => {
+  if (e.target.id === "session-switcher") session.switchTo(e.target.value);
+});
+document.getElementById("session-info").addEventListener("click", (e) => {
+  if (e.target.id === "header-logout-btn") session.removeActive();
+});
 
 // ---------- API + logging ----------
 function log(method, path, status, body) {
@@ -35,6 +80,13 @@ function log(method, path, status, body) {
   el.prepend(entry);
 }
 
+let inFlight = 0;
+function setBusy(delta) {
+  inFlight += delta;
+  document.body.classList.toggle("busy", inFlight > 0);
+  document.getElementById("busy-indicator").hidden = inFlight === 0;
+}
+
 async function api(method, path, body, { auth = true, isForm = false } = {}) {
   const headers = {};
   if (auth && session.token) headers["Authorization"] = `Bearer ${session.token}`;
@@ -42,6 +94,7 @@ async function api(method, path, body, { auth = true, isForm = false } = {}) {
 
   let status = 0;
   let data = null;
+  setBusy(1);
   try {
     const res = await fetch(`${API}${path}`, {
       method,
@@ -53,6 +106,8 @@ async function api(method, path, body, { auth = true, isForm = false } = {}) {
     data = text ? tryParseJson(text) : null;
   } catch (err) {
     data = { error: String(err) };
+  } finally {
+    setBusy(-1);
   }
   log(method, path, status, data);
   return { status, data, ok: status >= 200 && status < 300 };
@@ -94,7 +149,7 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
   if (ok) session.set(data);
 });
 
-document.getElementById("logout-btn").addEventListener("click", () => session.clear());
+document.getElementById("logout-btn").addEventListener("click", () => session.clearAll());
 
 // ---------- profile ----------
 document.getElementById("load-profile-btn").addEventListener("click", async () => {
