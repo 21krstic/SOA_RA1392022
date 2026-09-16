@@ -18,6 +18,22 @@ function getSessions() {
 }
 function saveSessions(sessions) { localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions)); }
 
+// Views that show data scoped to whichever account is active — must be
+// cleared on every account switch so stale data from the previous account
+// doesn't linger until the user happens to reload that tab.
+const ACCOUNT_VIEW_IDS = [
+  "profile-view", "feed-view", "recs-view", "my-tours-view",
+  "keypoints-view", "browse-tour-view", "reviews-view",
+  "cart-view", "checkout-view", "purchases-view",
+  "position-view", "exec-view", "exec-action-view",
+];
+function clearAccountViews() {
+  ACCOUNT_VIEW_IDS.forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = "";
+  });
+}
+
 const session = {
   get active() {
     const sessions = getSessions();
@@ -32,10 +48,12 @@ const session = {
     sessions[data.username] = data;
     saveSessions(sessions);
     localStorage.setItem(ACTIVE_KEY, data.username);
+    clearAccountViews();
     renderSession();
   },
   switchTo(username) {
     localStorage.setItem(ACTIVE_KEY, username);
+    clearAccountViews();
     renderSession();
   },
   removeActive() {
@@ -44,11 +62,13 @@ const session = {
     delete sessions[active];
     saveSessions(sessions);
     localStorage.setItem(ACTIVE_KEY, Object.keys(sessions)[0] || "");
+    clearAccountViews();
     renderSession();
   },
   clearAll() {
     localStorage.removeItem(SESSIONS_KEY);
     localStorage.removeItem(ACTIVE_KEY);
+    clearAccountViews();
     renderSession();
   },
 };
@@ -276,7 +296,12 @@ document.getElementById("unfollow-btn").addEventListener("click", async () => {
 
 document.getElementById("load-recs-btn").addEventListener("click", async () => {
   const { data, ok } = await api("GET", `/api/follows/${session.userId}/recommendations`);
-  if (ok) document.getElementById("recs-view").innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+  if (!ok) return;
+  const usernames = await Promise.all(data.map(async (id) => {
+    const res = await api("GET", `/api/users/${id}`, undefined, { auth: false });
+    return res.ok ? res.data.username : id;
+  }));
+  document.getElementById("recs-view").innerHTML = usernames.map((u) => `<div class="card">${u}</div>`).join("") || "<p>Nema preporuka.</p>";
 });
 
 // ---------- tours (guide) ----------
